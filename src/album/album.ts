@@ -3,12 +3,17 @@ import { Classes, YamzPlugin } from "../types";
 import "./album.css";
 
 export interface Albumed<Yamz extends MediumLightboxCore> {
-    moveToAlbumEntry: (entry: AlbumEntry<Yamz>, direction: "next" | "prev") => void;
+    moveToAlbumEntry: (
+        entry: AlbumEntry<Yamz>,
+        direction: "next" | "prev",
+        disableAlbumAnimations: boolean
+    ) => void;
 }
 
 export interface AlbumOptions<Yamz extends MediumLightboxCore> {
     album?: AlbumEntry<Yamz>[];
     wrapAlbum?: boolean;
+    disableAlbumAnimations?: boolean;
 }
 
 export interface AlbumEntry<Yamz extends MediumLightboxCore> {
@@ -28,6 +33,7 @@ export default function withAlbum<YamzType extends MediumLightboxCore>(_yamz: Ya
 
     yamz.options = {
         wrapAlbum: false,
+        disableAlbumAnimations: false,
         ...yamz.options,
     };
 
@@ -55,7 +61,11 @@ export default function withAlbum<YamzType extends MediumLightboxCore>(_yamz: Ya
                     return;
                 }
                 e.stopPropagation();
-                yamz.moveToAlbumEntry(opts.album[prevIndex], "prev");
+                yamz.moveToAlbumEntry(
+                    opts.album[prevIndex],
+                    "prev",
+                    opts.disableAlbumAnimations || false
+                );
             });
             $lightbox.appendChild($prev);
         }
@@ -67,7 +77,11 @@ export default function withAlbum<YamzType extends MediumLightboxCore>(_yamz: Ya
                     return;
                 }
                 e.stopPropagation();
-                yamz.moveToAlbumEntry(opts.album[nextIndex], "next");
+                yamz.moveToAlbumEntry(
+                    opts.album[nextIndex],
+                    "next",
+                    opts.disableAlbumAnimations || false
+                );
             });
             $lightbox.appendChild($next);
         }
@@ -111,7 +125,11 @@ export default function withAlbum<YamzType extends MediumLightboxCore>(_yamz: Ya
     };
 
     // add new method for moving to an album entry
-    yamz.moveToAlbumEntry = function(entry: AlbumEntry<YamzType>, direction: "next" | "prev") {
+    yamz.moveToAlbumEntry = function(
+        entry: AlbumEntry<YamzType>,
+        direction: "next" | "prev",
+        disableAlbumAnimations: boolean
+    ) {
         if (!this.active) {
             return;
         }
@@ -141,10 +159,14 @@ export default function withAlbum<YamzType extends MediumLightboxCore>(_yamz: Ya
             $newTarget.classList.add(`${Classes.IMG_WRAPPER}--in-${directions.in}`);
         };
 
-        setTimeout(_onAnimEnd, 1000); // fail safe if for whatever reason animation doesn't play
-        $target.addEventListener("animationend", _onAnimEnd);
-        $target.addEventListener("animationcancel", _onAnimEnd);
-        $target.classList.add(`${Classes.IMG_WRAPPER}--out-${directions.out}`);
+        if (disableAlbumAnimations) {
+            _onAnimEnd();
+        } else {
+            setTimeout(_onAnimEnd, 1000); // fail safe if for whatever reason animation doesn't play
+            $target.addEventListener("animationend", _onAnimEnd);
+            $target.addEventListener("animationcancel", _onAnimEnd);
+            $target.classList.add(`${Classes.IMG_WRAPPER}--out-${directions.out}`);
+        }
     };
 
     // finally extend the keyboard interactivity
@@ -173,7 +195,8 @@ export default function withAlbum<YamzType extends MediumLightboxCore>(_yamz: Ya
             if (targetIndex >= 0 && targetIndex < opts.album.length) {
                 (this as Albumed<YamzType>).moveToAlbumEntry(
                     opts.album[targetIndex],
-                    e.key === "ArrowLeft" ? "prev" : "next"
+                    e.key === "ArrowLeft" ? "prev" : "next",
+                    opts.disableAlbumAnimations || false
                 );
             }
         }

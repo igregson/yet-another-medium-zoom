@@ -926,7 +926,7 @@
             optsFromElm = _yamz.optsFromElm,
             onKeyDown = _yamz.onKeyDown;
         var yamz = _yamz;
-        yamz.options = __assign({ wrapAlbum: false }, yamz.options);
+        yamz.options = __assign({ wrapAlbum: false, disableAlbumAnimations: false }, yamz.options);
         function augmentLightbox(yamz, $lightbox, opts, index) {
             if (!opts.album) {
                 return $lightbox;
@@ -945,7 +945,11 @@
                         return;
                     }
                     e.stopPropagation();
-                    yamz.moveToAlbumEntry(opts.album[prevIndex], "prev");
+                    yamz.moveToAlbumEntry(
+                        opts.album[prevIndex],
+                        "prev",
+                        opts.disableAlbumAnimations || false
+                    );
                 });
                 $lightbox.appendChild($prev);
             }
@@ -957,7 +961,11 @@
                         return;
                     }
                     e.stopPropagation();
-                    yamz.moveToAlbumEntry(opts.album[nextIndex], "next");
+                    yamz.moveToAlbumEntry(
+                        opts.album[nextIndex],
+                        "next",
+                        opts.disableAlbumAnimations || false
+                    );
                 });
                 $lightbox.appendChild($next);
             }
@@ -994,7 +1002,7 @@
             return outp;
         };
         // add new method for moving to an album entry
-        yamz.moveToAlbumEntry = function(entry, direction) {
+        yamz.moveToAlbumEntry = function(entry, direction, disableAlbumAnimations) {
             var _this = this;
             if (!this.active) {
                 return;
@@ -1020,10 +1028,14 @@
                 }
                 $newTarget.classList.add(Classes.IMG_WRAPPER + "--in-" + directions.in);
             };
-            setTimeout(_onAnimEnd, 1000); // fail safe if for whatever reason animation doesn't play
-            $target.addEventListener("animationend", _onAnimEnd);
-            $target.addEventListener("animationcancel", _onAnimEnd);
-            $target.classList.add(Classes.IMG_WRAPPER + "--out-" + directions.out);
+            if (disableAlbumAnimations) {
+                _onAnimEnd();
+            } else {
+                setTimeout(_onAnimEnd, 1000); // fail safe if for whatever reason animation doesn't play
+                $target.addEventListener("animationend", _onAnimEnd);
+                $target.addEventListener("animationcancel", _onAnimEnd);
+                $target.classList.add(Classes.IMG_WRAPPER + "--out-" + directions.out);
+            }
         };
         // finally extend the keyboard interactivity
         yamz.onKeyDown = function(e) {
@@ -1051,7 +1063,8 @@
                 if (targetIndex >= 0 && targetIndex < opts.album.length) {
                     this.moveToAlbumEntry(
                         opts.album[targetIndex],
-                        e.key === "ArrowLeft" ? "prev" : "next"
+                        e.key === "ArrowLeft" ? "prev" : "next",
+                        opts.disableAlbumAnimations || false
                     );
                 }
             }

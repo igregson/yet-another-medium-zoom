@@ -1,11 +1,16 @@
 import { MediumLightboxCore } from "../core";
 import "./album.css";
 export interface Albumed<Yamz extends MediumLightboxCore> {
-    moveToAlbumEntry: (entry: AlbumEntry<Yamz>, direction: "next" | "prev") => void;
+    moveToAlbumEntry: (
+        entry: AlbumEntry<Yamz>,
+        direction: "next" | "prev",
+        disableAlbumAnimations: boolean
+    ) => void;
 }
 export interface AlbumOptions<Yamz extends MediumLightboxCore> {
     album?: AlbumEntry<Yamz>[];
     wrapAlbum?: boolean;
+    disableAlbumAnimations?: boolean;
 }
 export interface AlbumEntry<Yamz extends MediumLightboxCore> {
     img: HTMLElement;
